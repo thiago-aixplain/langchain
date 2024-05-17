@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import json
 from typing import Union
 
 from langchain_core.agents import AgentAction, AgentFinish
@@ -50,8 +51,12 @@ class JSONAgentOutputParser(AgentOutputParser):
             if response["action"] == "Final Answer":
                 return AgentFinish({"output": response["action_input"]}, text)
             else:
+                try:
+                    action_input = json.loads(response["action_input"])
+                except Exception:
+                    action_input = response.get("action_input", {})
                 return AgentAction(
-                    response["action"], response.get("action_input", {}), text
+                    response["action"], action_input, text
                 )
         except Exception as e:
             raise OutputParserException(f"Could not parse LLM output: {text}") from e
